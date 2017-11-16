@@ -21,7 +21,7 @@ public abstract class ArmVariables {
 	byte register1,register2,registerDest;
 
 	int branchTrue,storeTrue,loadTrue;
-
+	boolean isDataproc,isBranch,isDatatrans,swi_exit;
 	byte condition,opcode,immediate;
 
 
@@ -29,11 +29,12 @@ public abstract class ArmVariables {
 	abstract long fetch();
 	abstract void decode();
 	abstract void shift_operand2();
-	abstract byte execute();
+	abstract boolean execute();
 	abstract void update_flags();
 	abstract void mem();
 	abstract void write_back();
 	abstract long read_word(int address);
+	
 	//write to array pointer mem+address
 	abstract void write_word(int address,long data);
 

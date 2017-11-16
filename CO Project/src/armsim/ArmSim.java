@@ -13,7 +13,10 @@ public class ArmSim extends ArmVariables {
 			this.MEM_HEAP[i]=0;
 			this.MEM_INST[i]=0;
 		}
-
+		this.isBranch=false;
+		this.isDataproc=false;
+		this.isDatatrans=false;
+		this.swi_exit=false;
 		this.answer=0;
 		this.branchTrue=0;
 		this.condition=0;
@@ -57,28 +60,28 @@ public class ArmSim extends ArmVariables {
 		decodeInst=(byte)((this.instruction_word & 201326592)>> 26);
 		
 		switch(decodeInst){
-		case 0:
+		case 0:this.isDataproc=true;
 			if(status==1)
 				System.out.println("DECODE : Decoded instruction is of type data process");
 			/*
 			 * code to decode data process instructions here
 			 */
 			break;
-		case 1:
+		case 1:this.isDatatrans=true;
 			if(status==1)
 				System.out.println("DECODE : Decoded instruction is of type data transfer");
 			/*
 			 * code to decode data transfer instruction here
 			 */
 			break;
-		case 2:
+		case 2:this.isBranch=true;
 			if(status==1)
 				System.out.println("DECODE : Decoded instruction is of type branch");
 			/*
 			 * code to decode branch instruction here
 			 */
 			break;
-		case 3:
+		case 3:this.swi_exit=true;
 			if(status==1)
 				System.out.println("DECODE : Decoded instruction is SWI_EXIT");
 			this.swi_exit();
@@ -94,9 +97,27 @@ public class ArmSim extends ArmVariables {
 	}
 
 	@Override
-	byte execute() {
+	boolean execute() {
 		// TODO Auto-generated method stub
-		return 0;
+		if(this.isDataproc)
+		{
+			/*
+			 * code for data process
+			 */
+		}
+		else if(this.isDatatrans){
+			/*
+			 * code for execution of data transfer
+			 */
+		}
+		else if(this.isBranch){
+			/*
+			 * code for execution of branch instruction
+			 */
+		}
+		else if(this.swi_exit)
+			return false;
+		return true;
 	}
 
 	@Override
