@@ -46,7 +46,7 @@ public class ArmSim extends ArmVariables {
 		this.instruction_word=this.read_word(this.R[PCregister]);
 		String hexInst=Long.toHexString(instruction_word);
 		if(status==1)
-			System.out.println("FETCH : FETCHED INSTRUCTION 0x"+hexInst+" FROM ADDRESS "+R[PCregister]);
+			//System.out.println("FETCH : FETCHED INSTRUCTION 0x"+hexInst+" FROM ADDRESS "+R[PCregister]);
 		this.R[PCregister]+=4;
 		return this.instruction_word;
 	}
@@ -56,7 +56,8 @@ public class ArmSim extends ArmVariables {
 		// TODO Auto-generated method stub
 		
 		byte decodeInst;
-		
+		System.out.println("instruction word: "+this.instruction_word+" & ke baad "+(this.instruction_word & 201326592)+" "
+				+ "\nafter shift "+ ((this.instruction_word & 201326592)>> 26));
 		decodeInst=(byte)((this.instruction_word & 201326592)>> 26);
 		
 		switch(decodeInst){
@@ -83,7 +84,7 @@ public class ArmSim extends ArmVariables {
 			break;
 		case 3:this.swi_exit=true;
 			if(status==1)
-				System.out.println("DECODE : Decoded instruction is SWI_EXIT");
+				//System.out.println("DECODE : Decoded instruction is SWI_EXIT");
 			this.swi_exit();
 			break;
 		}
