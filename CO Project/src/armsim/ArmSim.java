@@ -60,7 +60,7 @@ public class ArmSim extends ArmVariables {
 	@Override
 	void decode() {
 		// TODO Auto-generated method stub
-
+		System.out.println(this.swi_exit+" SWI_EXIT");
 		int function;
 
 		function = Integer.parseInt(this.instruction_word.substring(4, 6), 2);
@@ -188,11 +188,11 @@ public class ArmSim extends ArmVariables {
 					|| (this.condition == 12 && !this.NegativeFalg && !this.ZeroFlag)
 					|| (this.condition == 13 && (this.NegativeFalg || this.ZeroFlag)) || (this.condition == 14)){
 				this.branchTrue = true;
-				System.out.println("Can take Branch");
+				//System.out.println("Can take Branch");
 			}
 			else{
 				this.branchTrue=false;
-				System.out.println("Branch Can't Be Taken!");
+				//System.out.println("Branch Can't Be Taken!");
 			}
 
 		}
@@ -208,20 +208,86 @@ public class ArmSim extends ArmVariables {
 	@Override
 	boolean execute() {
 		// TODO Auto-generated method stub
+
 		if (this.isDataproc) {
 			/*
 			 * code for data process
 			 */
+			switch(this.opcode){
+			case 0:
+				this.answer=this.operand1&this.operand2;
+				System.out.println("EXECUTE : AND "+ this.operand1+", "+this.operand2);
+				break;
+			case 1:
+				this.answer=this.operand1 ^ this.operand2;
+				System.out.println("EXECUTE : XOR "+ this.operand1+", "+this.operand2);
+				break;
+			case 2:
+				this.answer=this.operand1 - this.operand2;
+				System.out.println("EXECUTE : SUBTRACT "+ this.operand1+", "+this.operand2);
+				break;
+			case 4:
+				this.answer=this.operand1 + this.operand2;
+				System.out.println("EXECUTE : ADD "+ this.operand1+", "+this.operand2);
+				break;
+			case 5:
+				this.answer=this.operand1 + this.operand2+ 1;
+				System.out.println("EXECUTE : ADD WITH CARRY"+ this.operand1+", "+this.operand2);
+				break;
+			case 12:
+				this.answer=this.operand1 | this.operand2;
+				System.out.println("EXECUTE : OR "+ this.operand1+", "+this.operand2);
+				break;
+			case 13:
+				this.answer=this.operand2;
+				System.out.println("EXECUTE : MOVE "+ this.operand2+ " TO " +this.registerDest);
+				break;
+			case 15:
+				this.answer=~this.operand2;
+				System.out.println("EXECUTE : NOT "+ this.operand2);
+				break;
+			default:System.out.println("Wrong Code");
+			
+			}
+			
+			
 		} else if (this.isDatatrans) {
 			/*
 			 * code for execution of data transfer
 			 */
+			this.register1=Integer.parseInt(this.instruction_word.substring(12, 16),2);
+			this.registerDest=Integer.parseInt(this.instruction_word.substring(16, 20),2);
+			
 		} else if (this.isBranch) {
 			/*
 			 * code for execution of branch instruction
 			 */
-		} else if (this.swi_exit)
-			return false;
+			//First change PC value to go to previous instruction
+			this.R[this.PCregister]=this.R[this.PCregister]-4;
+			//now calculate offset where need to jump and then add that to pc
+			Long offSet=0L;
+			String offSetString=this.instruction_word.substring(8, 32);
+			int s=Integer.parseInt(this.instruction_word.substring(8, 9),2);
+			
+			//extend the sign if sign value is 1
+			if(s==1)
+				offSetString="11111111"+offSetString;
+			else
+				offSetString="00000000"+offSetString;
+			offSet=Long.parseLong(offSetString,2);
+			System.out.println(offSet+" OFFSET");
+			//shift off set by 4;
+			offSet=offSet<<2;
+			//now add 2 more index or 2*4 to offset
+			offSet=offSet+8;
+			this.R[this.PCregister]=this.R[this.PCregister]+offSet;
+			
+			
+		} 
+		
+		else if (this.swi_exit){
+			//return false;
+		}
 		return true;
 	}
 
