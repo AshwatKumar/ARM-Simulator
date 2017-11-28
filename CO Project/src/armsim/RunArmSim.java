@@ -36,18 +36,11 @@ public class RunArmSim {
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
 			String line;
 			while ((line = bufferedReader.readLine()) != null) {
-				// System.out.println(line);
 				int i = line.indexOf(" ");
-				// substring taken from index 2 to remove 0x
 				String s1 = line.substring(2, i);
-				String s2 = line.substring(i + 1, line.length());
+				String instruction = line.substring(i + 1, line.length());
 				int address = Integer.parseInt(s1, 16);
-				long instruction = Long.parseLong(s2, 16);
-
-				// System.out.println(address+" "+instruction);
-				// System.out.println(address+" "+instruction);
-
-				// passing address and instruction to be written in memory array
+				//System.out.println(instruction+" INStruction");
 				armVar.write_word(address, instruction);
 			}
 			fileReader.close();
@@ -58,24 +51,25 @@ public class RunArmSim {
 	}
 
 	void runarmsim(ArmVariables allArmVariables) {
-		long instruction;
+		String instruction;
 		boolean executed;
+		String zeroString=String.format("%32s", "0").replace(" ", "0");
 		// Value in PC counter is smaller than 4000 index of memory coz
 		// we have memory size 4000
 		while (allArmVariables.R[15] < 4000) {
 			instruction = allArmVariables.fetch();
-			if (instruction == 0)
+			if (instruction.equals(zeroString))
 				return;
-
+			
 			allArmVariables.decode();
 			
-			 executed=allArmVariables.execute(); 
-			 if(!executed) return;
-			 /* 
-			 * allArmVariables.mem();
-			 * 
-			 * allArmVariables.write_back();
-			 */
+			executed=allArmVariables.execute(); 
+			if(!executed) return;
+			  
+			allArmVariables.mem();
+			  
+			allArmVariables.write_back();
+			 
 
 		}
 	}
