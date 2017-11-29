@@ -13,7 +13,7 @@ public class RunArmSim {
 		Scanner in = new Scanner(System.in);
 		// System.out.println("Give name of instruction file with path");
 		// String path=in.next();
-		String path = "arraySum.mem";
+		String path = in.next();    //File name with extension
 		if (path.length() == 0) {
 			System.out.println("INVALID FILE PATH PLEASE RESTART");
 			System.exit(1);
