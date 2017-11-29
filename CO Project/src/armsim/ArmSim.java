@@ -49,9 +49,9 @@ public class ArmSim extends ArmVariables {
 
 	@Override
 	void swi_print() {
-		
+
 		if(this.R[0]==1)
-		System.out.println("SWI_PRINT : VALUE IN REGISTER1 "+this.R[1]);
+			System.out.println("SWI_PRINT : VALUE IN REGISTER1 "+this.R[1]);
 		else
 			System.out.println("SWI_PRINT : CAN'T PRINT");
 
@@ -59,7 +59,7 @@ public class ArmSim extends ArmVariables {
 
 	@Override
 	void swi_read() {
-		
+
 		if(this.R[0]==0){
 			try{
 				this.R[0]=this.readFile.nextLong();
@@ -69,7 +69,7 @@ public class ArmSim extends ArmVariables {
 				System.out.println("SWI_READ : CAN'T READ FROM FILE SOME ERORRRR!");
 				System.exit(0);
 			}
-			
+
 		}
 		else{
 			System.out.println("SWI_READ : CAN'T READ FROM FILE SOME ERORRRR!");
@@ -184,7 +184,7 @@ public class ArmSim extends ArmVariables {
 			else if (LoadOrStore == 0)
 				this.storeTrue = true;
 			else {
-				//System.out.println("Last Bit Of Opcode is :" + LoadOrStore);
+				//System.out.println("No Load Store");
 			}
 			break;
 
@@ -215,12 +215,12 @@ public class ArmSim extends ArmVariables {
 			if(swiType==108){
 				this.swi_read=true;
 				System.out.println("DECODE : Decoded instruction is SWI_READ");
-				
+
 			}
 			else if(swiType==107){
 				this.swi_print=true;
 				System.out.println("DECODE : Decoded instruction is SWI_PRINT");
-				
+
 			}
 			else if(swiType==17){
 				this.swi_exit = true;
@@ -286,7 +286,8 @@ public class ArmSim extends ArmVariables {
 				this.answer=~this.operand2;
 				System.out.println("EXECUTE : NOT "+ this.operand2);
 				break;
-			default://System.out.println("Wrong Code");
+			default:
+				System.out.println("EXECUTE : GIVEN OPCODE HAS NOT BEEN ADDED");
 
 			}
 
@@ -326,7 +327,7 @@ public class ArmSim extends ArmVariables {
 			//System.exit(0);
 			//now add 2 more index or 2*4 to offset
 			offSet=offSet+8;
-			System.out.println(this.R[this.PCregister]);
+			System.out.print("BRANCH : BRANCH FROM "+this.R[this.PCregister]+" TO ");
 			this.R[this.PCregister]=this.R[this.PCregister]+offSet;
 			System.out.println(this.R[this.PCregister]);
 
@@ -350,7 +351,7 @@ public class ArmSim extends ArmVariables {
 		if(this.isDatatrans){
 			if(i==0){
 				//this is load or store using register and shift 
-				
+
 				//get Rm store it
 				this.register2=Integer.parseInt(this.instruction_word.substring(28, 32),2);
 				this.operand2=(int)this.R[this.register2];
@@ -375,24 +376,24 @@ public class ArmSim extends ArmVariables {
 				/*
 				 * need to see this roation is done here
 				 */
-			  //now everything same as data processor
-			  //shift according to type of shift i.e
-			  /*
-			   * 00 = logical left
-			   * 01 = logical right
-			   * 11 = rotate right
-			   */
-			  if (shift.equals("11")) {
-				  	//rotating right
+				//now everything same as data processor
+				//shift according to type of shift i.e
+				/*
+				 * 00 = logical left
+				 * 01 = logical right
+				 * 11 = rotate right
+				 */
+				if (shift.equals("11")) {
+					//rotating right
 					this.operand2 = this.operand2 >> shiftAmount;
-					this.operand2 = this.operand2 | this.operand2 << (64 - shiftAmount);
+			this.operand2 = this.operand2 | this.operand2 << (64 - shiftAmount);
 				} 
-			  else if (shift.equals("00"))// left shifting
+				else if (shift.equals("00"))// left shifting
 					this.operand2 = this.operand2 << shiftAmount;
-				
-			  else if (shift.equals("01"))// right shift
+
+				else if (shift.equals("01"))// right shift
 					this.operand2 = this.operand2 >> shiftAmount;
-					offSetValue=(int)this.operand2;
+				offSetValue=(int)this.operand2;
 
 			}
 			//if shifting is by imediate

@@ -13,10 +13,10 @@ public class RunArmSim {
 		Scanner in = new Scanner(System.in);
 		// System.out.println("Give name of instruction file with path");
 		// String path=in.next();
-		String path = "arraySum.mem";    //File name with extension
-		while (path.length() == 0) {//Take input till valid file name
-			System.out.println("INVALID 'FILE PATH/FILE NAME' PLEASE ENTER AGAIN");
-			path=in.next();
+		String path = "comp.mem";
+		if (path.length() == 0) {
+			System.out.println("INVALID FILE PATH PLEASE RESTART");
+			System.exit(1);
 		}
 		// reallocating all variables
 		ArmVariables armVar = new ArmSim();
