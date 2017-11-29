@@ -14,9 +14,9 @@ public class RunArmSim {
 		// System.out.println("Give name of instruction file with path");
 		// String path=in.next();
 		String path = in.next();    //File name with extension
-		if (path.length() == 0) {
-			System.out.println("INVALID FILE PATH PLEASE RESTART");
-			System.exit(1);
+		while (path.length() == 0) {//Take input till valid file name
+			System.out.println("INVALID 'FILE PATH/FILE NAME' PLEASE ENTER AGAIN");
+			path=in.next();
 		}
 		// reallocating all variables
 		ArmVariables armVar = new ArmSim();
