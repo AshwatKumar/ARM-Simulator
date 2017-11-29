@@ -1,8 +1,9 @@
 package armsim;
 
-public class ArmSim extends ArmVariables {
+public class ArmSim extends ArmVariables 
+{
 	// flags
-	boolean NegativeFalg = false, ZeroFlag = false;
+	boolean NegativeFalg = false, ZeroFlag = false, OverflowFlag = false;
 	int PCregister = 15;
 	int debug = 1, status = 1;
 
@@ -40,7 +41,8 @@ public class ArmSim extends ArmVariables {
 	}
 
 	@Override
-	String fetch() {
+	String fetch() 
+	{
 		String hexString = new String(this.read_word((int) this.R[PCregister]));
 		String temp = Long.toBinaryString(Long.parseLong(hexString, 16));
 
@@ -48,10 +50,11 @@ public class ArmSim extends ArmVariables {
 		System.out.println("");
 		// System.out.println(this.instruction_word);
 		// System.out.println(temp+" temp");
-		// System.out.println(this.instruction_word);
+		 System.out.println(this.instruction_word);
 		if (status == 1) {
 			System.out.println("FETCH : FETCHED INSTRUCTION 0x" + hexString + " FROM ADDRESS " + R[PCregister]);
 		}
+		System.out.println();
 		this.R[PCregister] += 4;
 
 		return this.instruction_word;
@@ -117,18 +120,7 @@ public class ArmSim extends ArmVariables {
 				// "+this.instruction_word);
 				this.operand2 = this.R[register2 - 1];
 				// NOW SHIFTINH OPERAND @ THERE IF NEED TO SHIFT
-				String shiftCodeWord = this.instruction_word.substring(20, 28);// size
-																				// is
-																				// 8
-																				// bits
-																				// 0
-																				// 1
-																				// 2
-																				// 3
-																				// 4
-																				// 5
-																				// 6
-																				// 7
+				String shiftCodeWord = this.instruction_word.substring(20, 28);
 				int shiftingType = Integer.parseInt(shiftCodeWord.substring(7, 8), 2);
 				// for shift by immediate or by register value
 
@@ -177,32 +169,31 @@ public class ArmSim extends ArmVariables {
 			}
 
 		}
-		if (this.isBranch) {
+		if (this.isBranch) 
+		{
 			/*
 			 * code to decode branch instruction here
 			 */
-			this.condition = Integer.parseInt(this.instruction_word.substring(0, 4), 2);
-
-			if ((this.condition == 0 && this.ZeroFlag) || (this.condition == 1 && !this.ZeroFlag)
-					|| (this.condition == 11 && this.NegativeFalg) || (this.condition == 10 && !this.NegativeFalg)
-					|| (this.condition == 12 && !this.NegativeFalg && !this.ZeroFlag)
-					|| (this.condition == 13 && (this.NegativeFalg || this.ZeroFlag)) || (this.condition == 14)){
-				this.branchTrue = true;
-				//System.out.println("Can take Branch");
+			if ( this.instruction_word.substring(23,24).equals("0") )
+			{
+				this.condition = Integer.parseInt(this.instruction_word.substring(0, 4), 2);
+				
+				//|| (this.condition == 11 && this.NegativeFalg) || (this.condition == 10 && !this.NegativeFalg )
+				//|| (this.condition == 12 && !this.NegativeFalg && !this.ZeroFlag)
+				if (( this.condition == 0 && this.ZeroFlag ) || ( this.condition == 1 && !this.ZeroFlag )
+						|| ( this.condition == 10 && ( this.NegativeFalg == this.OverflowFlag )) || ( this.condition == 11 && ( this.NegativeFalg != this.OverflowFlag ))
+						|| (this.condition == 12 && ( this.ZeroFlag == false && this.NegativeFalg == this.OverflowFlag))
+						|| (this.condition == 13 && ( this.ZeroFlag == true && this.NegativeFalg != this.OverflowFlag) ))
+				{
+					this.branchTrue = true;
+					//System.out.println("Can take Branch");
+				}
+				else{
+					this.branchTrue=false;
+					//System.out.println("Branch Can't Be Taken!");
+				}
 			}
-			else{
-				this.branchTrue=false;
-				//System.out.println("Branch Can't Be Taken!");
-			}
-
 		}
-
-	}
-
-	@Override
-	void shift_operand2() {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -243,8 +234,28 @@ public class ArmSim extends ArmVariables {
 				System.out.println("EXECUTE : MOVE "+ this.operand2+ " TO " +this.registerDest);
 				break;
 			case 15:
-				this.answer=~this.operand2;
+				this.answer=this.operand2;
 				System.out.println("EXECUTE : NOT "+ this.operand2);
+				break;
+			case 10:
+				this.answer = this.operand1 - this.operand2;
+				if ( this.answer == 0 )
+				{
+					ZeroFlag = true;
+				}
+				else if ( this.answer < 0 )
+				{
+					NegativeFalg = true;
+				}
+				else
+				{
+					boolean res1 = checkAdditionOverFlow(operand1,operand2);
+					boolean res2 = checkSubtractionOverFlow(operand1,operand2);
+					if ( res1 == true || res2 == true )
+						OverflowFlag = true;
+				}
+				System.out.println("EXECUTE : COMPARE with "+this.operand1+" To "+this.operand2);
+				System.out.println(" UPDATING ALU FLAG STATUS N , V , Z ");
 				break;
 			default:System.out.println("Wrong Code");
 			
@@ -267,13 +278,11 @@ public class ArmSim extends ArmVariables {
 			//now calculate offset where need to jump and then add that to pc
 			Long offSet=0L;
 			String offSetString=this.instruction_word.substring(8, 32);
-			int s=Integer.parseInt(this.instruction_word.substring(8, 9),2);
-			
-			//extend the sign if sign value is 1
+/*			int s=Integer.parseInt(this.instruction_word.substring(8, 9),2);
 			if(s==1)
 				offSetString="11111111"+offSetString;
 			else
-				offSetString="00000000"+offSetString;
+				offSetString="00000000"+offSetString;*/
 			offSet=Long.parseLong(offSetString,2);
 			System.out.println(offSet+" OFFSET");
 			//shift off set by 4;
@@ -281,18 +290,36 @@ public class ArmSim extends ArmVariables {
 			//now add 2 more index or 2*4 to offset
 			offSet=offSet+8;
 			this.R[this.PCregister]=this.R[this.PCregister]+offSet;
-			
-			
 		} 
-		
 		else if (this.swi_exit){
 			//return false;
 		}
 		return true;
 	}
-
+	
+	boolean checkAdditionOverFlow( long l1 , long l2 )
+	{
+	    try 
+	    {
+	        Math.addExact(l1, l2);
+	        return false;
+	    }catch (ArithmeticException e) {
+	        return true;
+	    }
+	}
+	
+	boolean checkSubtractionOverFlow( long l1 , long l2 )
+	{
+	    try {
+	        Math.subtractExact(l1, l2);
+	        return false;
+	    } catch (ArithmeticException e) {
+	        return true;
+	    }
+	}
+	
 	@Override
-	void update_flags() {
+	void shift_operand2() {
 		// TODO Auto-generated method stub
 
 	}
