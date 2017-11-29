@@ -1,6 +1,4 @@
 package armsim; 
-// define DEBUG 1
-//define STATUS 1
 public abstract class ArmVariables {
 	//registe files
 	long R[]=new long[16];
@@ -36,7 +34,6 @@ public abstract class ArmVariables {
 	abstract void write_back();
 	abstract String read_word_Instruction(int address);
 	abstract long read_word_Data(int address);
-	
 	//write to array pointer mem+address
 	abstract void write_word_Instruction(int address,String data);
 	abstract void write_word_Data(int address,long data);

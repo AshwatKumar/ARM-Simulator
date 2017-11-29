@@ -1,12 +1,20 @@
-package armsim;
 
+package armsim;
+import java.util.Scanner;
+import java.io.*;
 public class ArmSim extends ArmVariables {
 	// flags
-	boolean NegativeFalg = false, ZeroFlag = false;
+	boolean NegativeFalg = false, ZeroFlag = false,OverflowFlag=false;
 	int PCregister = 15;
-	int debug = 1, status = 1;
-
+	Scanner readFile;
 	ArmSim() {
+		try{
+			File f=new File("dataread.txt");
+			this.readFile=new Scanner(f);
+		}
+		catch(Exception e){
+			System.out.println("NO FILE FOR INPUT TERMINATE EXECUTION IF YOU WANT!");
+		}
 		for (int i = 0; i < 16; i++)
 			this.R[i] = 0;
 		for (int i = 0; i < 4000; i++) {
@@ -41,13 +49,31 @@ public class ArmSim extends ArmVariables {
 
 	@Override
 	void swi_print() {
-
+		
+		if(this.R[0]==1)
+		System.out.println("SWI_PRINT : VALUE IN REGISTER1 "+this.R[1]);
+		else
+			System.out.println("SWI_PRINT : CAN'T PRINT");
 
 	}
 
 	@Override
 	void swi_read() {
-
+		
+		if(this.R[0]==0){
+			try{
+				this.R[0]=this.readFile.nextLong();
+				System.out.println("SWI_READ : READ VALUE IS "+ this.R[0]);	
+			}
+			catch(Exception e){
+				System.out.println("SWI_READ : CAN'T READ FROM FILE SOME ERORRRR!");
+				System.exit(0);
+			}
+			
+		}
+		else{
+			System.out.println("SWI_READ : CAN'T READ FROM FILE SOME ERORRRR!");
+		}
 
 	}
 
@@ -61,11 +87,8 @@ public class ArmSim extends ArmVariables {
 		// System.out.println(this.instruction_word);
 		// System.out.println(temp+" temp");
 		// System.out.println(this.instruction_word);
-		if (status == 1) {
-			System.out.println("FETCH : FETCHED INSTRUCTION 0x" + hexString + " FROM ADDRESS " + R[PCregister]);
-		}
+		System.out.println("FETCH : FETCHED INSTRUCTION 0x" + hexString + " FROM ADDRESS " + R[PCregister]);
 		this.R[PCregister] += 4;
-
 		return this.instruction_word;
 	}
 
@@ -80,33 +103,7 @@ public class ArmSim extends ArmVariables {
 		switch (function) {
 		case 0:
 			this.isDataproc = true;
-			if (status == 1) {
-				System.out.println("DECODE : Decoded instruction is of type data process");
-			}
-			break;
-		case 1:
-			this.isDatatrans = true;
-			if (status == 1) {
-				System.out.println("DECODE : Decoded instruction is of type data transfer");
-			}
-			break;
-		case 2:
-			this.isBranch = true;
-			if (status == 1) {
-				System.out.println("DECODE : Decoded instruction is of type branch");
-
-			}
-			break;
-		case 3:
-			this.swi_exit = true;
-			if (status == 1) {
-				System.out.println("DECODE : Decoded instruction is SWI_EXIT");
-				this.swi_exit();
-			}
-			break;
-		}
-
-		if (this.isDataproc) {
+			System.out.println("DECODE : Decoded instruction is of type data process");
 			/*
 			 * code to decode data process instructions here
 			 */
@@ -116,6 +113,7 @@ public class ArmSim extends ArmVariables {
 			this.register1 = Integer.parseInt(this.instruction_word.substring(12, 16), 2);
 			// System.out.println(register1+" "+this.instruction_word);
 			this.registerDest = Integer.parseInt(this.instruction_word.substring(16, 20), 2);
+			//System.out.println("DESTINATION REGISTER :"+this.registerDest+" "+this.instruction_word);
 			//System.out.println(this.registerDest+" REGISTER DEST " + this.instruction_word);
 			if (this.register1 != 0)
 				this.operand1 = this.R[register1];
@@ -166,14 +164,14 @@ public class ArmSim extends ArmVariables {
 					this.operand2 = this.operand2 >> shiftAmount;
 
 			}
+			System.out.println("DECODE : Register1 is " + this.register1 + " Register2 is " + this.register2
+					+ " RegisterDest is " + this.registerDest);
 
-			if (status == 1) {
-				System.out.println("DECODE : Register1 is " + this.register1 + " Register2 is " + this.register2
-						+ " RegisterDest is " + this.registerDest);
-			}
 
-		}
-		if (this.isDatatrans) {
+			break;
+		case 1:
+			this.isDatatrans = true;
+			System.out.println("DECODE : Decoded instruction is of type data transfer");
 			/*
 			 * code to decode transfer instruction here
 			 */
@@ -188,18 +186,22 @@ public class ArmSim extends ArmVariables {
 			else {
 				//System.out.println("Last Bit Of Opcode is :" + LoadOrStore);
 			}
+			break;
 
-		}
-		if (this.isBranch) {
+		case 2:
+			this.isBranch = true;
+			System.out.println("DECODE : Decoded instruction is of type branch");
 			/*
 			 * code to decode branch instruction here
 			 */
 			this.condition = Integer.parseInt(this.instruction_word.substring(0, 4), 2);
 
-			if ((this.condition == 0 && this.ZeroFlag) || (this.condition == 1 && !this.ZeroFlag)
-					|| (this.condition == 11 && this.NegativeFalg) || (this.condition == 10 && !this.NegativeFalg)
-					|| (this.condition == 12 && !this.NegativeFalg && !this.ZeroFlag)
-					|| (this.condition == 13 && (this.NegativeFalg || this.ZeroFlag)) || (this.condition == 14)){
+			if ( ( this.condition == 0 && this.ZeroFlag ) || ( this.condition == 1 && !this.ZeroFlag )
+					|| ( this.condition == 10 && ( this.NegativeFalg == this.OverflowFlag )) 
+					|| ( this.condition == 11 && ( this.NegativeFalg != this.OverflowFlag ))
+					|| (this.condition == 12 && ( this.ZeroFlag == false && this.NegativeFalg == this.OverflowFlag))
+					|| (this.condition == 13 && ( this.ZeroFlag == true && this.NegativeFalg != this.OverflowFlag) )
+					|| (this.condition == 14 ) ){
 				this.branchTrue = true;
 				//System.out.println("Can take Branch");
 			}
@@ -207,14 +209,31 @@ public class ArmSim extends ArmVariables {
 				this.branchTrue=false;
 				//System.out.println("Branch Can't Be Taken!");
 			}
-
+			break;
+		case 3:
+			int swiType=Integer.parseInt(this.instruction_word.substring(24, 32),2);
+			if(swiType==108){
+				this.swi_read=true;
+				System.out.println("DECODE : Decoded instruction is SWI_READ");
+				
+			}
+			else if(swiType==107){
+				this.swi_print=true;
+				System.out.println("DECODE : Decoded instruction is SWI_PRINT");
+				
+			}
+			else if(swiType==17){
+				this.swi_exit = true;
+				System.out.println("DECODE : Decoded instruction is SWI_EXIT");
+				this.swi_exit();
+			}
+			break;
 		}
 
 	}
 
 	@Override
 	boolean execute() {
-		// TODO Auto-generated method stub
 
 		if (this.isDataproc) {
 			/*
@@ -261,7 +280,7 @@ public class ArmSim extends ArmVariables {
 			case 13:
 				this.answer=this.operand2;
 				System.out.println("EXECUTE : MOVE "+ this.operand2+ " TO Register" +this.registerDest);
-				
+
 				break;
 			case 15:
 				this.answer=~this.operand2;
@@ -313,7 +332,10 @@ public class ArmSim extends ArmVariables {
 
 
 		} 
-
+		else if(this.swi_read)
+			this.swi_read();
+		else if(this.swi_print)
+			this.swi_print();
 		else if (this.swi_exit){
 			return false;
 		}
@@ -326,30 +348,26 @@ public class ArmSim extends ArmVariables {
 		int i=Integer.parseInt(this.instruction_word.substring(6, 7),2);
 		int offSetValue=0;
 		if(this.isDatatrans){
-			
 			if(i==0){
+				//this is load or store using register and shift 
+				
+				//get Rm store it
 				this.register2=Integer.parseInt(this.instruction_word.substring(28, 32),2);
 				this.operand2=(int)this.R[this.register2];
-				String shiftCodeWord = this.instruction_word.substring(20, 28);// size
-				// is
-				// 8
-				// bits
-				// 0
-				// 1
-				// 2
-				// 3
-				// 4
-				// 5
-				// 6
-				// 7
+				//to get shift from offset
+				String shiftCodeWord = this.instruction_word.substring(20, 28);
+				//shiftingtype indicate pre or post indexing
 				int shiftingType = Integer.parseInt(shiftCodeWord.substring(7, 8), 2);
 				// for shift by immediate or by register value
-
-				int rs = 0, shiftAmount = 0;
+				int sr = 0, shiftAmount = 0;//shift register and shift amount
 				if (shiftingType == 1) {
-					rs = Integer.parseInt(shiftCodeWord.substring(0, 4), 2);
-					shiftAmount = (int) this.R[rs];
-				} else if (shiftingType == 0) {
+					//if shiftingtype is 1 means add offset before transfer
+					//rs store first 4 bit value of shiftcodeword
+					sr = Integer.parseInt(shiftCodeWord.substring(0, 4), 2);
+					shiftAmount = (int) this.R[sr];
+				} 
+				else if (shiftingType == 0) {
+					//add offset after transfer
 					shiftAmount = Integer.parseInt(shiftCodeWord.substring(0, 5), 2);
 				}
 
@@ -357,19 +375,34 @@ public class ArmSim extends ArmVariables {
 				/*
 				 * need to see this roation is done here
 				 */
-				if (shift.equals("11")) {
+			  //now everything same as data processor
+			  //shift according to type of shift i.e
+			  /*
+			   * 00 = logical left
+			   * 01 = logical right
+			   * 11 = rotate right
+			   */
+			  if (shift.equals("11")) {
+				  	//rotating right
 					this.operand2 = this.operand2 >> shiftAmount;
-				this.operand2 = this.operand2 | this.operand2 << (64 - shiftAmount);
-				} else if (shift.equals("00"))// left shifting
+					this.operand2 = this.operand2 | this.operand2 << (64 - shiftAmount);
+				} 
+			  else if (shift.equals("00"))// left shifting
 					this.operand2 = this.operand2 << shiftAmount;
-				else if (shift.equals("01"))// right shift
+				
+			  else if (shift.equals("01"))// right shift
 					this.operand2 = this.operand2 >> shiftAmount;
-				offSetValue=(int)this.operand2;
+					offSetValue=(int)this.operand2;
 
 			}
-			else if(i==1)
+			//if shifting is by imediate
+			else if(i==1){
 				//for 20 to 32
+				//take simply offset value
 				offSetValue=Integer.parseInt(this.instruction_word.substring(20, 32),2);
+			}
+			//now offset and operand has been calculated accoring to immediate or shift and register
+			//transfer it according to load or store
 			if(this.loadTrue){
 				int tempaddress=(int)this.R[this.register1]+offSetValue;
 				long tempData=read_word_Data(tempaddress);
@@ -379,7 +412,7 @@ public class ArmSim extends ArmVariables {
 			else if(this.storeTrue){
 				int tempaddress=(int)this.R[this.register1]+offSetValue;
 				this.write_word_Data(tempaddress, this.R[this.registerDest]);
-				
+
 			}
 			else{
 				System.out.println("no load store");
@@ -392,13 +425,14 @@ public class ArmSim extends ArmVariables {
 	void write_back() {
 		// TODO Auto-generated method stub
 		if(!this.storeTrue && !this.loadTrue){
-		if(this.isDataproc && this.opcode!=10){
-			this.R[this.registerDest]=this.answer;
-			System.out.println("WRITEBACK : WRITE "+ this.answer+" TO REGISTER "+this.registerDest);
-		}
-		else{
-			//System.out.println("no write back");
-		}
+			if(this.isDataproc && this.opcode!=10){
+				this.R[this.registerDest]=this.answer;
+				System.out.println("WRITEBACK : WRITE "+ this.answer+" TO REGISTER "+this.registerDest);
+			}
+			else{
+				//System.out.println("no write back");
+			}
+
 		}
 		this.isBranch = false;
 		this.isDataproc = false;
@@ -444,4 +478,3 @@ public class ArmSim extends ArmVariables {
 	}
 
 }
-
