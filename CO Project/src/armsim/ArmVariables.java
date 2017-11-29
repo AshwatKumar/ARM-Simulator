@@ -1,27 +1,30 @@
 package armsim; 
 public abstract class ArmVariables {
-	//registe files
-	long R[]=new long[16];
-	
-	
 
 	//memory for both instruction and allocation
 	//hex string at address
 	Long MEMFORDATA[]=new Long[4000];
 	String MEMFORINST[]=new String[4000];
+	//registe files
+	long R[]=new long[16];
 
 	//control signals
 	//instuction as binary string
 	String instruction_word;
-	long operand1,operand2,answer;
+	long operand1,operand2,executedCalc;
 
 	//registers in instructions
 
-	int register1,register2,registerDest;
+	int register1,register2,destinationRegister;
 
-	boolean branchTrue,storeTrue,loadTrue;
-	boolean isDataproc,isBranch,isDatatrans,swi_exit,swi_print,swi_read;
-	int condition,opcode,immediate;
+	boolean DataProcessInstruction,BranchInstruction,DataTransferInstruction,takeBranch,toStore,toLoad;
+	boolean swi_exit,swi_print,swi_read;
+	int conditionValue,opcodeValue,immediateValue;
+	
+	// flags
+	boolean NegativeFalg, ZeroFlag,OverflowFlag;
+	//fixes pc register
+	final int PCregister = 15;
 
 
 	abstract void swi_exit();

@@ -1,43 +1,51 @@
 
 package armsim;
 import java.util.Scanner;
-import java.io.*;
 public class ArmSim extends ArmVariables {
-	// flags
-	boolean NegativeFalg = false, ZeroFlag = false,OverflowFlag=false;
-	int PCregister = 15;
-	Scanner readFile;
+	
+	//CONSOLE INPUT
+	Scanner in=new Scanner(System.in);
+	//FILE INPUT
+	//Scanner readFile;
 	ArmSim() {
-		try{
+		/*try{
 			File f=new File("dataread.txt");
 			this.readFile=new Scanner(f);
 		}
 		catch(Exception e){
 			System.out.println("NO FILE FOR INPUT TERMINATE EXECUTION IF YOU WANT!");
 		}
+		*/
 		for (int i = 0; i < 16; i++)
 			this.R[i] = 0;
 		for (int i = 0; i < 4000; i++) {
 			this.MEMFORDATA[i] = 0L;
 			this.MEMFORINST[i] = new String("0");
 		}
-		this.isBranch = false;
-		this.isDataproc = false;
-		this.isDatatrans = false;
+		
+		this.BranchInstruction = false;
+		this.DataProcessInstruction = false;
+		this.DataTransferInstruction = false;
 		this.swi_exit = false;
-		this.answer = 0;
-		this.branchTrue = false;
-		this.condition = 0;
-		this.immediate = 0;
+		this.swi_print=false;
+		this.swi_read=false;
+		this.takeBranch = false;
+		this.toLoad = false;
+		this.toStore = false;
+		this.NegativeFalg=false;
+		this.OverflowFlag=false;
+		this.ZeroFlag=false;
 		this.instruction_word = "";
-		this.loadTrue = false;
-		this.opcode = 0;
+		this.executedCalc = 0;
+		this.conditionValue = 0;
+		this.immediateValue = 0;
+		this.opcodeValue = 0;
 		this.operand1 = 0;
 		this.operand2 = 0;
 		this.register1 = 0;
 		this.register2 = 0;
-		this.registerDest = 0;
-		this.storeTrue = false;
+		this.destinationRegister = 0;
+		
 
 	}
 
@@ -61,14 +69,20 @@ public class ArmSim extends ArmVariables {
 	void swi_read() {
 
 		if(this.R[0]==0){
+			
+			this.R[0]=this.in.nextLong();
+			System.out.println("SWI_READ : READ VALUE IS "+ this.R[0]);	
+			/*
 			try{
-				this.R[0]=this.readFile.nextLong();
+				//this code is if want to read from file
+				//this.R[0]=this.readFile.nextLong();
 				System.out.println("SWI_READ : READ VALUE IS "+ this.R[0]);	
 			}
 			catch(Exception e){
 				System.out.println("SWI_READ : CAN'T READ FROM FILE SOME ERORRRR!");
 				System.exit(0);
 			}
+			*/
 
 		}
 		else{
@@ -102,22 +116,22 @@ public class ArmSim extends ArmVariables {
 		//
 		switch (function) {
 		case 0:
-			this.isDataproc = true;
+			this.DataProcessInstruction = true;
 			System.out.println("DECODE : Decoded instruction is of type data process");
 			/*
 			 * code to decode data process instructions here
 			 */
 
-			this.immediate = Integer.parseInt(this.instruction_word.substring(6, 7), 2);
-			this.opcode = Integer.parseInt(this.instruction_word.substring(7, 11), 2);
+			this.immediateValue = Integer.parseInt(this.instruction_word.substring(6, 7), 2);
+			this.opcodeValue = Integer.parseInt(this.instruction_word.substring(7, 11), 2);
 			this.register1 = Integer.parseInt(this.instruction_word.substring(12, 16), 2);
 			// System.out.println(register1+" "+this.instruction_word);
-			this.registerDest = Integer.parseInt(this.instruction_word.substring(16, 20), 2);
+			this.destinationRegister = Integer.parseInt(this.instruction_word.substring(16, 20), 2);
 			//System.out.println("DESTINATION REGISTER :"+this.registerDest+" "+this.instruction_word);
 			//System.out.println(this.registerDest+" REGISTER DEST " + this.instruction_word);
 			if (this.register1 != 0)
 				this.operand1 = this.R[register1];
-			if (this.immediate == 1) {
+			if (this.immediateValue == 1) {
 				this.operand2 = Long.parseLong(this.instruction_word.substring(24, 32), 2);
 				int rotateImmediateBy = Integer.parseInt(this.instruction_word.substring(20, 24), 2);
 				this.operand2 = operand2 << rotateImmediateBy;
@@ -165,12 +179,12 @@ public class ArmSim extends ArmVariables {
 
 			}
 			System.out.println("DECODE : Register1 is " + this.register1 + " Register2 is " + this.register2
-					+ " RegisterDest is " + this.registerDest);
+					+ " RegisterDest is " + this.destinationRegister);
 
 
 			break;
 		case 1:
-			this.isDatatrans = true;
+			this.DataTransferInstruction = true;
 			System.out.println("DECODE : Decoded instruction is of type data transfer");
 			/*
 			 * code to decode transfer instruction here
@@ -180,33 +194,33 @@ public class ArmSim extends ArmVariables {
 			int LoadOrStore = Integer.parseInt(this.instruction_word.substring(11, 12), 2);
 			//System.out.println(this.opcode + " " + this.instruction_word);
 			if (LoadOrStore == 1)
-				this.loadTrue = true;
+				this.toLoad = true;
 			else if (LoadOrStore == 0)
-				this.storeTrue = true;
+				this.toStore = true;
 			else {
 				//System.out.println("No Load Store");
 			}
 			break;
 
 		case 2:
-			this.isBranch = true;
+			this.BranchInstruction = true;
 			System.out.println("DECODE : Decoded instruction is of type branch");
 			/*
 			 * code to decode branch instruction here
 			 */
-			this.condition = Integer.parseInt(this.instruction_word.substring(0, 4), 2);
+			this.conditionValue = Integer.parseInt(this.instruction_word.substring(0, 4), 2);
 
-			if ( ( this.condition == 0 && this.ZeroFlag ) || ( this.condition == 1 && !this.ZeroFlag )
-					|| ( this.condition == 10 && ( this.NegativeFalg == this.OverflowFlag )) 
-					|| ( this.condition == 11 && ( this.NegativeFalg != this.OverflowFlag ))
-					|| (this.condition == 12 && ( this.ZeroFlag == false && this.NegativeFalg == this.OverflowFlag))
-					|| (this.condition == 13 && ( this.ZeroFlag == true && this.NegativeFalg != this.OverflowFlag) )
-					|| (this.condition == 14 ) ){
-				this.branchTrue = true;
+			if ( ( this.conditionValue == 0 && this.ZeroFlag ) || ( this.conditionValue == 1 && !this.ZeroFlag )
+					|| ( this.conditionValue == 10 && ( this.NegativeFalg == this.OverflowFlag )) 
+					|| ( this.conditionValue == 11 && ( this.NegativeFalg != this.OverflowFlag ))
+					|| (this.conditionValue == 12 && ( this.ZeroFlag == false && this.NegativeFalg == this.OverflowFlag))
+					|| (this.conditionValue == 13 && ( this.ZeroFlag == true && this.NegativeFalg != this.OverflowFlag) )
+					|| (this.conditionValue == 14 ) ){
+				this.takeBranch = true;
 				//System.out.println("Can take Branch");
 			}
 			else{
-				this.branchTrue=false;
+				this.takeBranch=false;
 				//System.out.println("Branch Can't Be Taken!");
 			}
 			break;
@@ -235,38 +249,38 @@ public class ArmSim extends ArmVariables {
 	@Override
 	int execute() {
 
-		if (this.isDataproc) {
+		if (this.DataProcessInstruction) {
 			/*
 			 * code for data process
 			 */
-			switch(this.opcode){
-			case 0:
-				this.answer=this.operand1&this.operand2;
+			switch(this.opcodeValue){
+			case 0://AND
+				this.executedCalc=this.operand1&this.operand2;
 				System.out.println("EXECUTE : AND "+ this.operand1+", "+this.operand2);
 				break;
-			case 1:
-				this.answer=this.operand1 ^ this.operand2;
-				System.out.println("EXECUTE : XOR "+ this.operand1+", "+this.operand2);
+			case 1://EOR
+				this.executedCalc=this.operand1 ^ this.operand2;
+				System.out.println("EXECUTE : EOR "+ this.operand1+", "+this.operand2);
 				break;
 			case 2:
-				this.answer=this.operand1 - this.operand2;
-				System.out.println("EXECUTE : SUBTRACT "+ this.operand1+", "+this.operand2);
+				this.executedCalc=this.operand1 - this.operand2;
+				System.out.println("EXECUTE : SUB "+ this.operand1+", "+this.operand2);
 				break;
 			case 4:
-				this.answer=this.operand1 + this.operand2;
+				this.executedCalc=this.operand1 + this.operand2;
 				System.out.println("EXECUTE : ADD "+ this.operand1+", "+this.operand2);
 				break;
-			case 5:
-				this.answer=this.operand1 + this.operand2+ 1;
-				System.out.println("EXECUTE : ADD WITH CARRY"+ this.operand1+", "+this.operand2);
+			case 5://ADC
+				this.executedCalc=this.operand1 + this.operand2+ 1;
+				System.out.println("EXECUTE : ADC"+ this.operand1+", "+this.operand2);
 				break;
 			case 10:
-				this.answer=this.operand1-this.operand2;
-				if(this.answer<0)
+				this.executedCalc=this.operand1-this.operand2;
+				if(this.executedCalc<0)
 					this.NegativeFalg=true;
 				else
 					this.NegativeFalg=false;
-				if(this.answer==0)
+				if(this.executedCalc==0)
 					this.ZeroFlag=true;
 				else
 					this.ZeroFlag=false;
@@ -274,17 +288,17 @@ public class ArmSim extends ArmVariables {
 				//System.exit(0);
 				break;
 			case 12:
-				this.answer=this.operand1 | this.operand2;
+				this.executedCalc=this.operand1 | this.operand2;
 				System.out.println("EXECUTE : OR "+ this.operand1+", "+this.operand2);
 				break;
 			case 13:
-				this.answer=this.operand2;
-				System.out.println("EXECUTE : MOVE "+ this.operand2+ " TO Register" +this.registerDest);
+				this.executedCalc=this.operand2;
+				System.out.println("EXECUTE : MOVE "+ this.operand2+ " TO Register" +this.destinationRegister);
 
 				break;
 			case 15:
-				this.answer=~this.operand2;
-				System.out.println("EXECUTE : NOT "+ this.operand2);
+				this.executedCalc=~this.operand2;
+				System.out.println("EXECUTE : MVN "+ this.operand2);
 				break;
 			default:
 				System.out.println("EXECUTE : GIVEN OPCODE HAS NOT BEEN ADDED");
@@ -292,14 +306,14 @@ public class ArmSim extends ArmVariables {
 			}
 
 
-		} else if (this.isDatatrans) {
+		} else if (this.DataTransferInstruction) {
 			/*
 			 * code for execution of data transfer
 			 */
 			this.register1=Integer.parseInt(this.instruction_word.substring(12, 16),2);
-			this.registerDest=Integer.parseInt(this.instruction_word.substring(16, 20),2);
+			this.destinationRegister=Integer.parseInt(this.instruction_word.substring(16, 20),2);
 
-		} else if (this.isBranch && this.branchTrue) {
+		} else if (this.BranchInstruction && this.takeBranch) {
 			/*
 			 * code for execution of branch instruction
 			 */
@@ -348,7 +362,7 @@ public class ArmSim extends ArmVariables {
 	void mem() {
 		int i=Integer.parseInt(this.instruction_word.substring(6, 7),2);
 		int offSetValue=0;
-		if(this.isDatatrans){
+		if(this.DataTransferInstruction){
 			if(i==0){
 				//this is load or store using register and shift 
 
@@ -404,15 +418,15 @@ public class ArmSim extends ArmVariables {
 			}
 			//now offset and operand has been calculated accoring to immediate or shift and register
 			//transfer it according to load or store
-			if(this.loadTrue){
+			if(this.toLoad){
 				int tempaddress=(int)this.R[this.register1]+offSetValue;
 				long tempData=read_word_Data(tempaddress);
-				this.R[this.registerDest]=tempData;
-				System.out.println("MEMORY : LOAD TO REGISTER " +this.registerDest+ " VALUE"+ tempData+" From 0x" + Integer.toHexString(tempaddress));
+				this.R[this.destinationRegister]=tempData;
+				System.out.println("MEMORY : LOAD TO REGISTER " +this.destinationRegister+ " VALUE"+ tempData+" From 0x" + Integer.toHexString(tempaddress));
 			}
-			else if(this.storeTrue){
+			else if(this.toStore){
 				int tempaddress=(int)this.R[this.register1]+offSetValue;
-				this.write_word_Data(tempaddress, this.R[this.registerDest]);
+				this.write_word_Data(tempaddress, this.R[this.destinationRegister]);
 
 			}
 			else{
@@ -425,35 +439,36 @@ public class ArmSim extends ArmVariables {
 	@Override
 	void write_back() {
 		// TODO Auto-generated method stub
-		if(!this.storeTrue && !this.loadTrue){
-			if(this.isDataproc && this.opcode!=10){
-				this.R[this.registerDest]=this.answer;
-				System.out.println("WRITEBACK : WRITE "+ this.answer+" TO REGISTER "+this.registerDest);
+		if(!this.toStore && !this.toLoad){
+			if(this.DataProcessInstruction && this.opcodeValue!=10){
+				this.R[this.destinationRegister]=this.executedCalc;
+				System.out.println("WRITEBACK : WRITE "+ this.executedCalc+" TO REGISTER "+this.destinationRegister);
 			}
 			else{
 				//System.out.println("no write back");
 			}
 
 		}
-		this.isBranch = false;
-		this.isDataproc = false;
-		this.isDatatrans = false;
+		this.BranchInstruction = false;
+		this.DataProcessInstruction = false;
+		this.DataTransferInstruction = false;
 		this.swi_exit = false;
-		this.answer = 0;
-		this.branchTrue = false;
-		this.condition = 0;
-		this.immediate = 0;
+		this.swi_print=false;
+		this.swi_read=false;
+		this.takeBranch = false;
+		this.toLoad = false;
+		this.toStore = false;
 		this.instruction_word = "";
-		this.loadTrue = false;
-		this.opcode = 0;
+		this.executedCalc = 0;
+		this.conditionValue = 0;
+		this.immediateValue = 0;
+		this.opcodeValue = 0;
 		this.operand1 = 0;
 		this.operand2 = 0;
 		this.register1 = 0;
 		this.register2 = 0;
-		this.registerDest = 0;
-		this.storeTrue = false;
-		this.swi_print=false;
-		this.swi_read=false;
+		this.destinationRegister = 0;
+		
 
 	}
 

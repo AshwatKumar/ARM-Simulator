@@ -8,6 +8,7 @@ import java.io.IOException;
 public class RunArmSim {
 
 	public static void main(String[] args) {
+		
 		// TODO Auto-generated method stub
 		RunArmSim runArmSim = new RunArmSim();
 		Scanner in = new Scanner(System.in);
