@@ -11,9 +11,9 @@ public class RunArmSim {
 		// TODO Auto-generated method stub
 		RunArmSim runArmSim = new RunArmSim();
 		Scanner in = new Scanner(System.in);
-		// System.out.println("Give name of instruction file with path");
-		// String path=in.next();
-		String path = "comp.mem";
+		String path;
+		System.out.println("Give name of instruction file with path");
+		path=in.next();
 		if (path.length() == 0) {
 			System.out.println("INVALID FILE PATH PLEASE RESTART");
 			System.exit(1);
@@ -50,7 +50,7 @@ public class RunArmSim {
 
 	void runarmsim(ArmVariables allArmVariables) {
 		String instruction;
-		boolean executed;
+		int executedOrNot;
 		String zeroString=String.format("%32s", "0").replace(" ", "0");
 		// Value in PC counter is smaller than 4000 index of memory coz
 		// we have memory size 4000
@@ -61,8 +61,8 @@ public class RunArmSim {
 			
 			allArmVariables.decode();
 			
-			executed=allArmVariables.execute(); 
-			if(!executed) return;
+			executedOrNot=allArmVariables.execute(); 
+			if(executedOrNot==0) return;
 			  
 			allArmVariables.mem();
 			  

@@ -18,8 +18,8 @@ public class ArmSim extends ArmVariables {
 		for (int i = 0; i < 16; i++)
 			this.R[i] = 0;
 		for (int i = 0; i < 4000; i++) {
-			this.MEM_HEAP[i] = 0L;
-			this.MEM_INST[i] = new String("0");
+			this.MEMFORDATA[i] = 0L;
+			this.MEMFORINST[i] = new String("0");
 		}
 		this.isBranch = false;
 		this.isDataproc = false;
@@ -233,7 +233,7 @@ public class ArmSim extends ArmVariables {
 	}
 
 	@Override
-	boolean execute() {
+	int execute() {
 
 		if (this.isDataproc) {
 			/*
@@ -338,9 +338,9 @@ public class ArmSim extends ArmVariables {
 		else if(this.swi_print)
 			this.swi_print();
 		else if (this.swi_exit){
-			return false;
+			return 0;
 		}
-		return true;
+		return 1;
 	}
 
 
@@ -460,22 +460,22 @@ public class ArmSim extends ArmVariables {
 	@Override
 	String read_word_Instruction(int address) {
 		// TODO Auto-generated method stub
-		return this.MEM_INST[address];
+		return this.MEMFORINST[address];
 	}
 	long read_word_Data(int address) {
 		// TODO Auto-generated method stub
-		return this.MEM_HEAP[address];
+		return this.MEMFORDATA[address];
 	}
 
 	@Override
 	void write_word_Instruction(int address, String data) {
 		// TODO Auto-generated method stub
-		this.MEM_INST[address] = data;
+		this.MEMFORINST[address] = data;
 	}
 	@Override
 	void write_word_Data(int address, long data) {
 		// TODO Auto-generated method stub
-		this.MEM_HEAP[address] = data;
+		this.MEMFORDATA[address] = data;
 	}
 
 }

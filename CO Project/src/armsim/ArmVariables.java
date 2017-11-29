@@ -7,8 +7,8 @@ public abstract class ArmVariables {
 
 	//memory for both instruction and allocation
 	//hex string at address
-	Long MEM_HEAP[]=new Long[4000];
-	String MEM_INST[]=new String[4000];
+	Long MEMFORDATA[]=new Long[4000];
+	String MEMFORINST[]=new String[4000];
 
 	//control signals
 	//instuction as binary string
@@ -29,7 +29,7 @@ public abstract class ArmVariables {
 	abstract void swi_read();
 	abstract String fetch();
 	abstract void decode();
-	abstract boolean execute();
+	abstract int execute();
 	abstract void mem();
 	abstract void write_back();
 	abstract String read_word_Instruction(int address);
