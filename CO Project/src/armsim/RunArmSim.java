@@ -41,7 +41,7 @@ public class RunArmSim {
 				String instruction = line.substring(i + 1, line.length());
 				int address = Integer.parseInt(s1, 16);
 				//System.out.println(instruction+" INStruction");
-				armVar.write_word(address, instruction);
+				armVar.write_word_Instruction(address, instruction);
 			}
 			fileReader.close();
 		} catch (IOException e) {
@@ -75,7 +75,12 @@ public class RunArmSim {
 	}
 
 	void write_data_memory(ArmVariables armVar) {
-
+		try {
+			
+		}
+		catch(Exception e){
+			
+		}
 	}
 
 }
