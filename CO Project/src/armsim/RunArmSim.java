@@ -24,8 +24,6 @@ public class RunArmSim {
 		runArmSim.load_program_memory(path, armVar);
 		// running ARMSIM
 		runArmSim.runarmsim(armVar);
-		// writing back
-		runArmSim.write_data_memory(armVar);
 
 		in.close();
 	}
@@ -74,13 +72,5 @@ public class RunArmSim {
 		}
 	}
 
-	void write_data_memory(ArmVariables armVar) {
-		try {
-			
-		}
-		catch(Exception e){
-			
-		}
-	}
 
 }
