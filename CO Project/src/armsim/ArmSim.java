@@ -255,8 +255,25 @@ public class ArmSim extends ArmVariables {
 			 */
 			switch(this.opcodeValue){
 			case 0://AND
+				//24 se 28
+				int accumlate=Integer.parseInt(this.instruction_word.substring(10, 11),2);
+				int multiplyCondition1=Integer.parseInt(this.instruction_word.substring(4, 10),2);
+				int multiplyCondition2=Integer.parseInt(this.instruction_word.substring(24, 28),2);
+				if(accumlate==0 && multiplyCondition1==0 && multiplyCondition2==9){
+					int rm=Integer.parseInt(this.instruction_word.substring(28, 32),2);
+					int rs=Integer.parseInt(this.instruction_word.substring(20, 24),2);
+					this.operand1=this.R[rs];
+					this.operand2=this.R[rm];
+					this.destinationRegister=Integer.parseInt(this.instruction_word.substring(12, 16),2);
+					this.executedCalc=this.operand1*this.operand2;
+					System.out.println("EXECUTE : MUL "+ this.operand1+", "+this.operand2);
+					
+					
+				}
+				else{
 				this.executedCalc=this.operand1&this.operand2;
 				System.out.println("EXECUTE : AND "+ this.operand1+", "+this.operand2);
+				}
 				break;
 			case 1://EOR
 				this.executedCalc=this.operand1 ^ this.operand2;
