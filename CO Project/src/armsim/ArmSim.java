@@ -401,7 +401,7 @@ public class ArmSim extends ArmVariables {
 		int i=Integer.parseInt(this.instruction_word.substring(6, 7),2);
 		int offSetValue=0;
 		if(this.DataTransferInstruction){
-			if(i==0){
+			if(i==1){
 				//this is load or store using register and shift 
 
 				//get Rm store it
@@ -449,9 +449,10 @@ public class ArmSim extends ArmVariables {
 
 			}
 			//if shifting is by imediate
-			else if(i==1){
+			else if(i==0){
 				//for 20 to 32
 				//take simply offset value
+				//System.out.println("USING IMMEDIATE");
 				offSetValue=Integer.parseInt(this.instruction_word.substring(20, 32),2);
 			}
 			//now offset and operand has been calculated accoring to immediate or shift and register
