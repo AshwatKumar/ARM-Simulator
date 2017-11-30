@@ -156,7 +156,7 @@ public class ArmSim extends ArmVariables {
 				this.operand2 = this.R[register2];
 				// NOW SHIFTINH OPERAND @ THERE IF NEED TO SHIFT
 				String shiftCodeWord = this.instruction_word.substring(20, 28);// size
-				
+
 				int shiftingType = Integer.parseInt(shiftCodeWord.substring(7, 8), 2);
 				// for shift by immediate or by register value
 
@@ -222,7 +222,7 @@ public class ArmSim extends ArmVariables {
 				this.takeBranch = true;
 				if(Integer.parseInt(this.instruction_word.substring(4, 7),2)==5){
 					int linkBit=Integer.parseInt(this.instruction_word.substring(7, 8),2);
-				//	System.out.println(linkBit);
+					//	System.out.println(linkBit);
 					if(linkBit==1)
 						this.isLinkBranch=true;
 				}
@@ -366,7 +366,7 @@ public class ArmSim extends ArmVariables {
 			offSet=offSet+8;
 			if(this.isLinkBranch){
 				//
-				
+
 				this.R[this.Linkregister]=this.R[this.PCregister]+4;
 				for(int i=0;i<16;i++){
 					this.programStack.get(i).push(this.R[i]);
@@ -374,15 +374,15 @@ public class ArmSim extends ArmVariables {
 				System.out.print("LINKBRANCH : FROM "+this.R[this.PCregister]+" TO ");
 				this.R[this.PCregister]=this.R[this.PCregister]+offSet;
 				System.out.println(this.R[this.PCregister]);
-				
-				
+
+
 			}
 			else{
 				System.out.print("BRANCH : FROM "+this.R[this.PCregister]+" TO ");
 				this.R[this.PCregister]=this.R[this.PCregister]+offSet;
 				System.out.println(this.R[this.PCregister]);
 			}
-			
+
 
 		} 
 		else if(this.swi_read)
@@ -409,18 +409,16 @@ public class ArmSim extends ArmVariables {
 				this.operand2=(int)this.R[this.register2];
 				//to get shift from offset
 				String shiftCodeWord = this.instruction_word.substring(20, 28);
-				//shiftingtype indicate pre or post indexing
-				int shiftingType = Integer.parseInt(shiftCodeWord.substring(7, 8), 2);
+				//shifting type indicate shift by register or immediate
+				int shiftingType = Integer.parseInt(this.instruction_word.substring(7, 8), 2);
 				// for shift by immediate or by register value
 				int sr = 0, shiftAmount = 0;//shift register and shift amount
 				if (shiftingType == 1) {
-					//if shiftingtype is 1 means add offset before transfer
 					//rs store first 4 bit value of shiftcodeword
 					sr = Integer.parseInt(shiftCodeWord.substring(0, 4), 2);
 					shiftAmount = (int) this.R[sr];
 				} 
 				else if (shiftingType == 0) {
-					//add offset after transfer
 					shiftAmount = Integer.parseInt(shiftCodeWord.substring(0, 5), 2);
 				}
 
@@ -438,7 +436,7 @@ public class ArmSim extends ArmVariables {
 				if (shift.equals("11")) {
 					//rotating right
 					this.operand2 = this.operand2 >> shiftAmount;
-					this.operand2 = this.operand2 | this.operand2 << (64 - shiftAmount);
+				this.operand2 = this.operand2 | this.operand2 << (64 - shiftAmount);
 				} 
 				else if (shift.equals("00"))// left shifting
 					this.operand2 = this.operand2 << shiftAmount;
@@ -457,21 +455,44 @@ public class ArmSim extends ArmVariables {
 			}
 			//now offset and operand has been calculated accoring to immediate or shift and register
 			//transfer it according to load or store
-			if(this.toLoad){
-				int tempaddress=(int)this.R[this.register1]+offSetValue;
-				long tempData=read_word_Data(tempaddress);
-				this.R[this.destinationRegister]=tempData;
-				System.out.println("MEMORY : LOAD "+ tempData+" From 0x" + Integer.toHexString(tempaddress)+ " TO REGISTER " +this.destinationRegister);
+			int prePostbit=Integer.parseInt(this.instruction_word.substring(7, 8),2);
+			//System.out.println(prePostbit);
+			if(prePostbit==1){
+				if(this.toLoad){
+					int tempaddress=(int)this.R[this.register1]+offSetValue;
+					long tempData=read_word_Data(tempaddress);
+					this.R[this.destinationRegister]=tempData;
+					System.out.println("MEMORY : LOAD "+ tempData+" From 0x" + Integer.toHexString(tempaddress)+ " TO REGISTER " +this.destinationRegister);
+				}
+				else if(this.toStore){
+					int tempaddress=(int)this.R[this.register1]+offSetValue;
+					this.write_word_Data(tempaddress, this.R[this.destinationRegister]);
+					System.out.println("MEMORY : STORE "+ this.R[this.destinationRegister]+" to 0x" + Integer.toHexString(tempaddress));
+
+				}
+				else{
+					System.out.println("MEMORY : No memory Operation");
+				}
+
 			}
-			else if(this.toStore){
-				int tempaddress=(int)this.R[this.register1]+offSetValue;
-				this.write_word_Data(tempaddress, this.R[this.destinationRegister]);
-				System.out.println("MEMORY : STORE "+ this.R[this.destinationRegister]+" to 0x" + Integer.toHexString(tempaddress));
-				
+			else if(prePostbit==0){
+				if(this.toLoad){
+					int tempaddress=(int)this.R[this.register1];
+					long tempData=read_word_Data(tempaddress);
+					this.R[this.destinationRegister]=tempData+offSetValue;
+					System.out.println("MEMORY : LOAD "+ tempData+" From 0x" + Integer.toHexString(tempaddress)+ " TO REGISTER " +this.destinationRegister);
+				}
+				else if(this.toStore){
+					int tempaddress=(int)this.R[this.register1];
+					this.write_word_Data(tempaddress, this.R[this.destinationRegister]+offSetValue);
+					System.out.println("MEMORY : STORE "+ this.R[this.destinationRegister]+" to 0x" + Integer.toHexString(tempaddress));
+
+				}
+				else{
+					System.out.println("MEMORY : No memory Operation");
+				}
 			}
-			else{
-				System.out.println("MEMORY : No memory Operation");
-			}
+
 		}
 		else{
 			System.out.println("MEMORY : No memory Operation");
@@ -484,7 +505,7 @@ public class ArmSim extends ArmVariables {
 		// TODO Auto-generated method stub
 		//System.out.println("register2 "+14 + "DEST "+destinationRegister);
 		//System.out.println("register2 "+this.R[14] + "DEST "+this.R[this.PCregister]);
-		
+
 		if(this.register2==14 && this.destinationRegister==15){
 			this.R[this.PCregister]=this.R[this.Linkregister];
 			for(int i=0;i<15;i++){
@@ -494,7 +515,7 @@ public class ArmSim extends ArmVariables {
 		}
 		else if(!this.toStore && !this.toLoad){
 			if(this.DataProcessInstruction && this.opcodeValue!=10){
-				
+
 				this.R[this.destinationRegister]=this.executedCalc;
 				System.out.println("WRITEBACK : write "+ this.executedCalc+" to R"+this.destinationRegister);
 			}
