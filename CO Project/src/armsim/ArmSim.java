@@ -1,21 +1,22 @@
 
 package armsim;
 import java.util.Scanner;
+import java.io.*;
 public class ArmSim extends ArmVariables {
 	
 	//CONSOLE INPUT
 	Scanner in=new Scanner(System.in);
-	//FILE INPUT
-	//Scanner readFile;
+	//FILE outPut
+	File f=new File("output.txt");
+	PrintStream outFile;
 	ArmSim() {
-		/*try{
-			File f=new File("dataread.txt");
-			this.readFile=new Scanner(f);
+		try{
+			this.outFile=new PrintStream(f);
 		}
 		catch(Exception e){
 			System.out.println("NO FILE FOR INPUT TERMINATE EXECUTION IF YOU WANT!");
 		}
-		*/
+		
 		for (int i = 0; i < 16; i++)
 			this.R[i] = 0;
 		for (int i = 0; i < 4000; i++) {
@@ -51,6 +52,7 @@ public class ArmSim extends ArmVariables {
 
 	@Override
 	void swi_exit() {
+	
 		System.exit(0);
 
 	}
@@ -58,8 +60,16 @@ public class ArmSim extends ArmVariables {
 	@Override
 	void swi_print() {
 
-		if(this.R[0]==1)
+		if(this.R[0]==1){
+			try{
+				outFile.print(this.R[1]);
+				outFile.println();
+			}
+			catch(Exception e){
+				System.out.println("output file was not updated");
+			}
 			System.out.println("SWI_PRINT : VALUE IN REGISTER1 "+this.R[1]);
+		}
 		else
 			System.out.println("SWI_PRINT : CAN'T PRINT");
 
@@ -83,7 +93,7 @@ public class ArmSim extends ArmVariables {
 				System.exit(0);
 			}
 			*/
-
+			
 		}
 		else{
 			System.out.println("SWI_READ : CAN'T READ FROM FILE SOME ERORRRR!");
