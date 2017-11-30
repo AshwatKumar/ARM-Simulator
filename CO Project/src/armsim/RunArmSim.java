@@ -15,6 +15,7 @@ public class RunArmSim {
 		String path;
 		System.out.println("Give name of instruction file with path");
 		path=in.next();
+		//path="subroutine.mem";
 		if (path.length() == 0) {
 			System.out.println("INVALID FILE PATH PLEASE RESTART");
 			System.exit(1);

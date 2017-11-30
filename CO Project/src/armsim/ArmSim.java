@@ -1,9 +1,10 @@
 
 package armsim;
 import java.util.Scanner;
+import java.util.Stack;
 import java.io.*;
 public class ArmSim extends ArmVariables {
-	
+
 	//CONSOLE INPUT
 	Scanner in=new Scanner(System.in);
 	//FILE outPut
@@ -16,14 +17,16 @@ public class ArmSim extends ArmVariables {
 		catch(Exception e){
 			System.out.println("NO FILE FOR INPUT TERMINATE EXECUTION IF YOU WANT!");
 		}
-		
-		for (int i = 0; i < 16; i++)
+
+		for (int i = 0; i < 16; i++){
 			this.R[i] = 0;
+			this.programStack.add(new Stack<Long>());
+		}
 		for (int i = 0; i < 4000; i++) {
 			this.MEMFORDATA[i] = 0L;
 			this.MEMFORINST[i] = new String("0");
 		}
-		
+		this.isLinkBranch=false;
 		this.BranchInstruction = false;
 		this.DataProcessInstruction = false;
 		this.DataTransferInstruction = false;
@@ -46,13 +49,13 @@ public class ArmSim extends ArmVariables {
 		this.register1 = 0;
 		this.register2 = 0;
 		this.destinationRegister = 0;
-		
+
 
 	}
 
 	@Override
 	void swi_exit() {
-	
+
 		System.exit(0);
 
 	}
@@ -68,7 +71,7 @@ public class ArmSim extends ArmVariables {
 			catch(Exception e){
 				System.out.println("output file was not updated");
 			}
-			System.out.println("SWI_PRINT : VALUE IN REGISTER1 "+this.R[1]);
+			System.out.println("SWI_PRINT : value in r1 is "+this.R[1]);
 		}
 		else
 			System.out.println("SWI_PRINT : CAN'T PRINT");
@@ -79,9 +82,9 @@ public class ArmSim extends ArmVariables {
 	void swi_read() {
 
 		if(this.R[0]==0){
-			
+
 			this.R[0]=this.in.nextLong();
-			System.out.println("SWI_READ : READ VALUE IS "+ this.R[0]);	
+			System.out.println("SWI_READ : read value is "+ this.R[0]);	
 			/*
 			try{
 				//this code is if want to read from file
@@ -92,11 +95,11 @@ public class ArmSim extends ArmVariables {
 				System.out.println("SWI_READ : CAN'T READ FROM FILE SOME ERORRRR!");
 				System.exit(0);
 			}
-			*/
-			
+			 */
+
 		}
 		else{
-			System.out.println("SWI_READ : CAN'T READ FROM FILE SOME ERORRRR!");
+			System.out.println("SWI_READ : can't read, some error!");
 		}
 
 	}
@@ -111,7 +114,7 @@ public class ArmSim extends ArmVariables {
 		// System.out.println(this.instruction_word);
 		// System.out.println(temp+" temp");
 		// System.out.println(this.instruction_word);
-		System.out.println("FETCH : FETCHED INSTRUCTION 0x" + hexString + " FROM ADDRESS " + R[PCregister]);
+		System.out.println("Fetch instruction 0x" + hexString + " from address 0x" + Long.toHexString(R[PCregister]));
 		this.R[PCregister] += 4;
 		return this.instruction_word;
 	}
@@ -127,7 +130,7 @@ public class ArmSim extends ArmVariables {
 		switch (function) {
 		case 0:
 			this.DataProcessInstruction = true;
-			System.out.println("DECODE : Decoded instruction is of type data process");
+			//System.out.println("DECODE :DATA PROCESS");
 			/*
 			 * code to decode data process instructions here
 			 */
@@ -153,17 +156,7 @@ public class ArmSim extends ArmVariables {
 				this.operand2 = this.R[register2];
 				// NOW SHIFTINH OPERAND @ THERE IF NEED TO SHIFT
 				String shiftCodeWord = this.instruction_word.substring(20, 28);// size
-				// is
-				// 8
-				// bits
-				// 0
-				// 1
-				// 2
-				// 3
-				// 4
-				// 5
-				// 6
-				// 7
+				
 				int shiftingType = Integer.parseInt(shiftCodeWord.substring(7, 8), 2);
 				// for shift by immediate or by register value
 
@@ -188,8 +181,8 @@ public class ArmSim extends ArmVariables {
 					this.operand2 = this.operand2 >> shiftAmount;
 
 			}
-			System.out.println("DECODE : Register1 is " + this.register1 + " Register2 is " + this.register2
-					+ " RegisterDest is " + this.destinationRegister);
+			System.out.println("DECODE : r1 is " + this.register1 + " r2 is " + this.register2
+					+ " rd is " + this.destinationRegister);
 
 
 			break;
@@ -214,7 +207,7 @@ public class ArmSim extends ArmVariables {
 
 		case 2:
 			this.BranchInstruction = true;
-			System.out.println("DECODE : Decoded instruction is of type branch");
+			System.out.println("DECODE : Instruction is branch");
 			/*
 			 * code to decode branch instruction here
 			 */
@@ -227,28 +220,34 @@ public class ArmSim extends ArmVariables {
 					|| (this.conditionValue == 13 && ( this.ZeroFlag == true && this.NegativeFalg != this.OverflowFlag) )
 					|| (this.conditionValue == 14 ) ){
 				this.takeBranch = true;
-				//System.out.println("Can take Branch");
+				if(Integer.parseInt(this.instruction_word.substring(4, 7),2)==5){
+					int linkBit=Integer.parseInt(this.instruction_word.substring(7, 8),2);
+				//	System.out.println(linkBit);
+					if(linkBit==1)
+						this.isLinkBranch=true;
+				}
+				//System.out.println();
 			}
 			else{
 				this.takeBranch=false;
-				//System.out.println("Branch Can't Be Taken!");
+				System.out.println("BRANCH :Can't be taken");
 			}
 			break;
 		case 3:
 			int swiType=Integer.parseInt(this.instruction_word.substring(24, 32),2);
 			if(swiType==108){
 				this.swi_read=true;
-				System.out.println("DECODE : Decoded instruction is SWI_READ");
+				System.out.println("DECODE : instruction is SWI_READ");
 
 			}
 			else if(swiType==107){
 				this.swi_print=true;
-				System.out.println("DECODE : Decoded instruction is SWI_PRINT");
+				System.out.println("DECODE : instruction is SWI_PRINT");
 
 			}
 			else if(swiType==17){
 				this.swi_exit = true;
-				System.out.println("DECODE : Decoded instruction is SWI_EXIT");
+				System.out.println("DECODE : instruction is SWI_EXIT");
 				this.swi_exit();
 			}
 			break;
@@ -276,30 +275,26 @@ public class ArmSim extends ArmVariables {
 					this.operand2=this.R[rm];
 					this.destinationRegister=Integer.parseInt(this.instruction_word.substring(12, 16),2);
 					this.executedCalc=this.operand1*this.operand2;
-					System.out.println("EXECUTE : MUL "+ this.operand1+", "+this.operand2);
-					
-					
+					System.out.println("EXECUTE : MUL "+ this.operand1+" by "+this.operand2);
+
+
 				}
 				else{
-				this.executedCalc=this.operand1&this.operand2;
-				System.out.println("EXECUTE : AND "+ this.operand1+", "+this.operand2);
+					this.executedCalc=this.operand1&this.operand2;
+					System.out.println("EXECUTE : AND "+ this.operand1+" with "+this.operand2);
 				}
 				break;
 			case 1://EOR
 				this.executedCalc=this.operand1 ^ this.operand2;
-				System.out.println("EXECUTE : EOR "+ this.operand1+", "+this.operand2);
+				System.out.println("EXECUTE : EOR "+ this.operand1+" with "+this.operand2);
 				break;
 			case 2:
 				this.executedCalc=this.operand1 - this.operand2;
-				System.out.println("EXECUTE : SUB "+ this.operand1+", "+this.operand2);
+				System.out.println("EXECUTE : SUB "+ this.operand2+" from "+this.operand1);
 				break;
 			case 4:
 				this.executedCalc=this.operand1 + this.operand2;
-				System.out.println("EXECUTE : ADD "+ this.operand1+", "+this.operand2);
-				break;
-			case 5://ADC
-				this.executedCalc=this.operand1 + this.operand2+ 1;
-				System.out.println("EXECUTE : ADC"+ this.operand1+", "+this.operand2);
+				System.out.println("EXECUTE : ADD "+ this.operand1+" with "+this.operand2);
 				break;
 			case 10:
 				this.executedCalc=this.operand1-this.operand2;
@@ -311,16 +306,17 @@ public class ArmSim extends ArmVariables {
 					this.ZeroFlag=true;
 				else
 					this.ZeroFlag=false;
-				System.out.println("EXECUTE : COMPARE "+ this.operand1+", "+this.operand2);
+				System.out.println("EXECUTE : CMP "+ this.operand1+" with "+this.operand2);
 				//System.exit(0);
 				break;
 			case 12:
 				this.executedCalc=this.operand1 | this.operand2;
-				System.out.println("EXECUTE : OR "+ this.operand1+", "+this.operand2);
+				System.out.println("EXECUTE : ORR "+ this.operand1+" with "+this.operand2);
 				break;
 			case 13:
 				this.executedCalc=this.operand2;
-				System.out.println("EXECUTE : MOVE "+ this.operand2+ " TO Register" +this.destinationRegister);
+
+				System.out.println("EXECUTE : MOV "+ this.operand2+ " to R" +this.destinationRegister);
 
 				break;
 			case 15:
@@ -345,7 +341,7 @@ public class ArmSim extends ArmVariables {
 			 * code for execution of branch instruction
 			 */
 			//First change PC value to go to previous instruction
-			System.out.println("in branch execution");
+			//System.out.println("in branch execution");
 			this.R[this.PCregister]=this.R[this.PCregister]-4;
 			//now calculate offset where need to jump and then add that to pc
 			int offSet=0;
@@ -368,10 +364,25 @@ public class ArmSim extends ArmVariables {
 			//System.exit(0);
 			//now add 2 more index or 2*4 to offset
 			offSet=offSet+8;
-			System.out.print("BRANCH : BRANCH FROM "+this.R[this.PCregister]+" TO ");
-			this.R[this.PCregister]=this.R[this.PCregister]+offSet;
-			System.out.println(this.R[this.PCregister]);
-
+			if(this.isLinkBranch){
+				//
+				
+				this.R[this.Linkregister]=this.R[this.PCregister]+4;
+				for(int i=0;i<16;i++){
+					this.programStack.get(i).push(this.R[i]);
+				}
+				System.out.print("LINKBRANCH : FROM "+this.R[this.PCregister]+" TO ");
+				this.R[this.PCregister]=this.R[this.PCregister]+offSet;
+				System.out.println(this.R[this.PCregister]);
+				
+				
+			}
+			else{
+				System.out.print("BRANCH : FROM "+this.R[this.PCregister]+" TO ");
+				this.R[this.PCregister]=this.R[this.PCregister]+offSet;
+				System.out.println(this.R[this.PCregister]);
+			}
+			
 
 		} 
 		else if(this.swi_read)
@@ -427,7 +438,7 @@ public class ArmSim extends ArmVariables {
 				if (shift.equals("11")) {
 					//rotating right
 					this.operand2 = this.operand2 >> shiftAmount;
-			this.operand2 = this.operand2 | this.operand2 << (64 - shiftAmount);
+					this.operand2 = this.operand2 | this.operand2 << (64 - shiftAmount);
 				} 
 				else if (shift.equals("00"))// left shifting
 					this.operand2 = this.operand2 << shiftAmount;
@@ -449,16 +460,20 @@ public class ArmSim extends ArmVariables {
 				int tempaddress=(int)this.R[this.register1]+offSetValue;
 				long tempData=read_word_Data(tempaddress);
 				this.R[this.destinationRegister]=tempData;
-				System.out.println("MEMORY : LOAD TO REGISTER " +this.destinationRegister+ " VALUE"+ tempData+" From 0x" + Integer.toHexString(tempaddress));
+				System.out.println("MEMORY : LOAD "+ tempData+" From 0x" + Integer.toHexString(tempaddress)+ " TO REGISTER " +this.destinationRegister);
 			}
 			else if(this.toStore){
 				int tempaddress=(int)this.R[this.register1]+offSetValue;
 				this.write_word_Data(tempaddress, this.R[this.destinationRegister]);
-
+				System.out.println("MEMORY : STORE "+ this.R[this.destinationRegister]+" to 0x" + Integer.toHexString(tempaddress));
+				
 			}
 			else{
-				System.out.println("no load store");
+				System.out.println("MEMORY : No memory Operation");
 			}
+		}
+		else{
+			System.out.println("MEMORY : No memory Operation");
 		}
 
 	}
@@ -466,13 +481,24 @@ public class ArmSim extends ArmVariables {
 	@Override
 	void write_back() {
 		// TODO Auto-generated method stub
-		if(!this.toStore && !this.toLoad){
+		//System.out.println("register2 "+14 + "DEST "+destinationRegister);
+		//System.out.println("register2 "+this.R[14] + "DEST "+this.R[this.PCregister]);
+		
+		if(this.register2==14 && this.destinationRegister==15){
+			this.R[this.PCregister]=this.R[this.Linkregister];
+			for(int i=0;i<15;i++){
+				this.R[i]=this.programStack.get(i).pop();
+			}
+
+		}
+		else if(!this.toStore && !this.toLoad){
 			if(this.DataProcessInstruction && this.opcodeValue!=10){
+				
 				this.R[this.destinationRegister]=this.executedCalc;
-				System.out.println("WRITEBACK : WRITE "+ this.executedCalc+" TO REGISTER "+this.destinationRegister);
+				System.out.println("WRITEBACK : write "+ this.executedCalc+" to R"+this.destinationRegister);
 			}
 			else{
-				//System.out.println("no write back");
+				System.out.println("WRITEBACK : no write back operation");
 			}
 
 		}
@@ -485,6 +511,7 @@ public class ArmSim extends ArmVariables {
 		this.takeBranch = false;
 		this.toLoad = false;
 		this.toStore = false;
+		this.isLinkBranch=false;
 		this.instruction_word = "";
 		this.executedCalc = 0;
 		this.conditionValue = 0;
@@ -495,7 +522,7 @@ public class ArmSim extends ArmVariables {
 		this.register1 = 0;
 		this.register2 = 0;
 		this.destinationRegister = 0;
-		
+
 
 	}
 

@@ -1,4 +1,5 @@
 package armsim; 
+import java.util.*;
 public abstract class ArmVariables {
 
 	//memory for both instruction and allocation
@@ -12,12 +13,12 @@ public abstract class ArmVariables {
 	//instuction as binary string
 	String instruction_word;
 	long operand1,operand2,executedCalc;
-
+	List<Stack<Long>> programStack=new ArrayList<Stack<Long>>();
 	//registers in instructions
 
 	int register1,register2,destinationRegister;
 
-	boolean DataProcessInstruction,BranchInstruction,DataTransferInstruction,takeBranch,toStore,toLoad;
+	boolean DataProcessInstruction,BranchInstruction,DataTransferInstruction,takeBranch,toStore,toLoad,isLinkBranch;
 	boolean swi_exit,swi_print,swi_read;
 	int conditionValue,opcodeValue,immediateValue;
 	
@@ -25,6 +26,7 @@ public abstract class ArmVariables {
 	boolean NegativeFalg, ZeroFlag,OverflowFlag;
 	//fixes pc register
 	final int PCregister = 15;
+	final int Linkregister=14;
 
 
 	abstract void swi_exit();
